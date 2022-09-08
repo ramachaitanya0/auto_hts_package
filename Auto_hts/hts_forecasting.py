@@ -8,7 +8,7 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
 from arch import arch_model
 import datetime as dt
 from datetime import timedelta
-From datetime import datetime
+from datetime import datetime
 from collections import OrderedDict
 
 funct = lambda x: np.floor(abs(x)) if ((abs(x) - np.floor(abs(x))) <= 0.5) else np.ceil(abs(x))
