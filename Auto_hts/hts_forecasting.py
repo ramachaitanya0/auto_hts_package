@@ -76,44 +76,45 @@ def time_series_scores(forecast, actual):
 def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogenus_variables,m):
 
     # With ARIMA Model
+    print("starting ARIM Model")
     forecasts_ARIM = pd.DataFrame()
     forecasts_ARIM_1 = pd.DataFrame()
     for col in sum_mat_labels:
         try:
             try:
                 stepwise_model = auto_arima(temp_train[col].values, exogenous=temp_train[exogenus_variables], stepwise=True,error_action='ignore', seasonal=True,  start_P=1, D=None, start_Q=1,   max_p= 2, max_q= 2, max_d= 2, max_P=2, max_D=2, max_Q=2, n_fits= 5).fit(temp_train[col].values)                                        
-                print("with exogeneous-m-12")
+                # print("with exogeneous-m-12")
                 fcst = stepwise_model.predict(n_periods= len(temp_test), start=temp_test.index[0], end=temp_test.index[-1], exog=temp_test[exogenus_variables])
             except:
                 stepwise_model = auto_arima(temp_train[col].values, stepwise=True, m=m, error_action='ignore', seasonal=True,   start_P=1, D=0, start_Q=1, max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1, max_Q=2, random= True, n_fits= 10).fit(temp_train[col].values)
-                print("without exogeneous-m-12")
+                # print(col , "without exogeneous-m-12")
                 fcst = stepwise_model.predict(n_periods= len(temp_test))
         except:
             try:
                 try:
                     stepwise_model = auto_arima(temp_train[col].values, exogenous=temp_train[exogenus_variables], stepwise=True,  error_action='ignore', seasonal=True, m=12, start_P=1, D=None, start_Q=1,   max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1,max_Q=2, n_fits= 10).fit(temp_train[col].values)
 
-                    print("with exogeneous-m-6")
+                    # print("with exogeneous-m-6")
                     fcst = stepwise_model.predict(n_periods=len(temp_test), start=temp_test.index[0],end=temp_test.index[-1], exog=temp_test[exogenus_variables])
                 except:
                     stepwise_model = auto_arima(temp_train[col].values, stepwise=True, m=12, error_action='ignore', seasonal=True, start_P=1, D=None, start_Q=1, max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1, max_Q=2, random= True, n_fits= 10).fit(temp_train[col].values)
-                    print("without exogeneous-m-6")
+                    # print("without exogeneous-m-6")
                     fcst = stepwise_model.predict(n_periods= len(temp_test))
             except:
                 try:
                     try:
                         stepwise_model = auto_arima(temp_train[col].values, exogenous=temp_train[exogenus_variables], stepwise=True, error_action='ignore', seasonal=True,  m= 4, start_P=1, D=None, start_Q=1,   max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1, max_Q=2,  n_fits= 10).fit(temp_train[col].values)
 
-                        print("with exogeneous-m-1")
+                        # print("with exogeneous-m-1")
                         fcst = stepwise_model.predict(n_periods=len(temp_test), start=temp_test.index[0],end=temp_test.index[-1], exog=temp_test[exogenus_variables])
                     except:
                         stepwise_model = auto_arima(temp_train[col].values, stepwise=True, error_action='ignore', seasonal=True, m=4,  start_P=1, D=None, start_Q=1, max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1, max_Q=2, random= True, n_fits= 10).fit(temp_train[col].values)
-                        print("without exogeneous-m-1")
+                        # print("without exogeneous-m-1")
                         fcst = stepwise_model.predict(n_periods= len(temp_test))
                 except:
                     fcst = np.random.randint(low = 0,high=2,size=len(temp_test))
         forecasts_ARIM[col] = fcst
-        print("ending ARIMA:", col)
+        # print("ending ARIMA:", col)
     forecasts_ARIM.index = temp_test.index
     pred_dict_ARIM = collections.OrderedDict()
     for label in forecasts_ARIM.columns:
@@ -136,12 +137,12 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
 
 
     # With Holt's Winter Smooth Exponential Model
-
+    print("starting HWSE Model")
     HWSE_model = pd.DataFrame(columns=sum_mat_labels)
     forecasts_HWSE = pd.DataFrame(columns=sum_mat_labels)
     forecasts_HWSE_1 = pd.DataFrame(columns=sum_mat_labels)
     for col in sum_mat_labels:
-        print('Starting HWSE:', col)
+        # print('Starting HWSE:', col)
         try:
             HWSE_model = HWES(temp_train[col], seasonal_periods=52, trend='add', seasonal='add').fit()
             forecasts_HWSE[col]=HWSE_model.forecast(steps=len(temp_test))
@@ -157,7 +158,7 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
                     forecasts_HWSE[col] = np.random.randint(low = 0,high=2,size=len(temp_test))
 
         forecasts_HWSE[col] = forecasts_HWSE[col].fillna(0)
-        print('Ending HWSE:', col)
+        # print('Ending HWSE:', col)
     forecasts_HWSE.index = temp_test.index
     pred_dict_HWSE = collections.OrderedDict()
     for label in forecasts_HWSE.columns:
@@ -178,7 +179,7 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
             0, col] = time_series_scores(revised_forecasts_HWSE[col], temp_test[col])
 
     # with Fb Prophet Model 
-
+    print("starting Propeht Model")
     PROP_model = pd.DataFrame(columns=sum_mat_labels)
     forecasts_PROP = pd.DataFrame(columns=sum_mat_labels)
     forecasts_PROP_1 = pd.DataFrame(columns=sum_mat_labels)
@@ -222,7 +223,7 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
         revised_forecasts_PROP[col] = revised_forecasts_PROP[col].apply(funct)
         mape_PROP.loc[0, col], rmse_PROP.loc[0, col], mae_PROP.loc[0, col], first_wk_mape_PROP.loc[
             0, col] = time_series_scores(revised_forecasts_PROP[col], temp_test[col])
-    print(revised_forecasts_PROP.head())
+    # print(revised_forecasts_PROP.head())
 
     # With ARCH Model 
 
@@ -233,28 +234,28 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
             try:
                 stepwise_model = arch_model(temp_train[[col]],  vol='ARCH',  p=1, lags=12).fit()
                 fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                print("ARCH_fcst:", fcst)
+                # print("ARCH_fcst:", fcst)
             except:
                 try:
                     stepwise_model = arch_model(temp_train[[col]], vol='ARCH', p=1, lags=6).fit()
                     fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                    print("ARCH_fcst:", fcst)
+                    # print("ARCH_fcst:", fcst)
                 except:
                     try:
                         stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=3).fit()
                         fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                        print("ARCH_fcst:", fcst)
+                        # print("ARCH_fcst:", fcst)
                     except:
                         stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=1).fit()
                         fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                        print("ARCH_fcst:", fcst)
+                        # print("ARCH_fcst:", fcst)
         except:
             print("ARCH_fcst: failed")
             fcst = np.random.randint(low = 0,high=2,size=len(temp_test))
         forecasts_ARCH[col] = fcst
-        print("ending ARCH:", col)
+        # print("ending ARCH:", col)
     forecasts_ARCH.index = temp_test.index
-    print("forecasts_ARCH:", forecasts_ARCH)
+    # print("forecasts_ARCH:", forecasts_ARCH)
     pred_dict_ARCH = collections.OrderedDict()
     for label in forecasts_ARCH.columns:
         if np.all(np.array(forecasts_ARCH[label].values)) :
@@ -273,12 +274,13 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
         revised_forecasts_ARCH[col] = revised_forecasts_ARCH[col].apply(funct)
         mape_ARCH.loc[0, col], rmse_ARCH.loc[0, col], mae_ARCH.loc[0, col], first_wk_mape_ARCH.loc[
             0, col] = time_series_scores(revised_forecasts_ARCH[col], temp_test[col])
-
+    print("ending the forecast models function")
     return  revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH
 
 
 def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
                   mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels):
+    print("starting ensemble forecasting ")              
     select_model = pd.DataFrame(columns=sum_mat_labels)
     forecasts_ENSE = pd.DataFrame(columns=sum_mat_labels)
     models_list = ["ARIM", "HWSE", "PROP", "ARCH"]
@@ -290,32 +292,39 @@ def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, rev
     mape_HWSE['approach'] = "HWSE"
     mape_PROP['approach'] = "PROP"
     mape_ARCH['approach'] = "ARCH"
-    print("mape_ARIM", mape_ARIM.shape)
-    print("mape_ARIM", mape_HWSE.shape)
-    print("mape_ARIM", mape_PROP.shape)
-    print("mape_ARIM", mape_ARCH.shape)
+    # print("mape_ARIM", mape_ARIM.shape)
+    # print("mape_HWSE", mape_HWSE.shape)
+    # print("mape_PROP", mape_PROP.shape)
+    # print("mape_ARCH", mape_ARCH.shape)
     mape_data = ((mape_ARIM.append(mape_HWSE)).append(mape_PROP)).append(mape_ARCH)
-    print("mape_data", mape_data.transpose())
+    # print("mape_data", mape_data.transpose())
     for col in sum_mat_labels:
-        select_model.loc[0, col] = mape_data[mape_data[col] == mape_data[col].min()]['approach'].to_numpy()
-        select_model[col] = select_model[col].to_string()[6:10]
+        select_model.loc[0, col] = mape_data[mape_data[col] == mape_data[col].min()]['approach'].to_numpy()[0]
+        # select_model[col] = select_model[col].to_string()[6:10]
     select_model = select_model.transpose().reset_index()
     select_model.columns = ['area/dealer', 'APPROACH']
     list_ARIMA = select_model[select_model['APPROACH'] == "ARIM"]['area/dealer'].to_list()
     list_HWSE = select_model[select_model['APPROACH'] == "HWSE"]['area/dealer'].to_list()
     list_PROP = select_model[select_model['APPROACH'] == "PROP"]['area/dealer'].to_list()
     list_ARCH = select_model[select_model['APPROACH'] == "ARCH"]['area/dealer'].to_list()
+    print("list of ARIMA", list_ARIMA)
+    print("list of HWSE", list_HWSE)
+    print("list of PROP", list_PROP)
+    print("list of ARCH", list_ARCH)
+    print("ending the ensemble forecasting function")
     return list_ARIMA, list_HWSE, list_PROP, list_ARCH
 
 
 def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tree, sum_mat, sum_mat_labels, fcst_input_data,exogenus_variables):
 #def forecast_refit(ts_data_2, list_ARIMA, list_HWSE,  tree, sum_mat, sum_mat_labels,fcst_input_data):
-
+    print("starting forecast refitting ") 
     forecasts_ARIM = pd.DataFrame(columns=list_ARIMA)
     fcst_start_date= fcst_input_data.index[0]
     print("fcst_start_date", fcst_start_date)
     fcst_end_date=  fcst_input_data.index[-1]
+    print("fcst_end_date",fcst_end_date)
     if len(list_ARIMA) > 0:
+        print("starting the refit for arima ")
         stepwise_model = pd.DataFrame(columns=list_ARIMA)
         forecasts_ARIM = pd.DataFrame()
         for col in list_ARIMA:
@@ -326,7 +335,7 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
                         fcst = stepwise_model.predict(n_periods= len(fcst_input_data), start=fcst_start_date, end=fcst_end_date, exog=fcst_input_data[exogenus_variables])
                     except:
                         stepwise_model = auto_arima(ts_data_2[col].values, stepwise=True, error_action='ignore', seasonal=True, m=52,  start_P=1, D=None, start_Q=1,   max_p= 3, max_q= 3, max_d= 3, max_P=2, max_D=1, max_Q=2).fit(ts_data_2[col].values)
-                        print("without exogeneous-m-12")
+                        print(col, "without exogeneous-m-12")
                         fcst = stepwise_model.predict(n_periods=len(fcst_input_data))
                 except:
                     try:
@@ -362,6 +371,7 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
     HWSE_model = pd.DataFrame(columns=list_HWSE)
     forecasts_HWSE = pd.DataFrame(columns=list_HWSE)
     if len(list_HWSE) > 0:
+        print("starting the refit for HWSE")
         for col in list_HWSE:
             try:
                 HWSE_model = HWES(ts_data_2[col], seasonal_periods=52, trend='add', seasonal='add').fit()
@@ -385,6 +395,7 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
     PROP_model = pd.DataFrame(columns=list_PROP)
     forecasts_PROP = pd.DataFrame(index=np.array(fcst_input_data.index),  columns=list_PROP)
     if len(list_PROP) > 0:
+        print("starting the refit for PROP ")
         for col in list_PROP:
             temp_prop_train = pd.DataFrame()
             temp_prop_train['ds'] = np.array(ts_data_2.index)
@@ -395,10 +406,10 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
                 temp_prop_train[exogenous_col] = ts_data_2[exogenous_col].values
                 temp_prop_test[exogenous_col] = fcst_input_data[exogenous_col].values
             
-            print("temp_prop_train", temp_prop_train)
-            print("temp_prop_test", temp_prop_test)
-            print("temp_prop_train", temp_prop_train.dtypes)
-            print("temp_prop_test", temp_prop_test.dtypes)
+            # print("temp_prop_train", temp_prop_train)
+            # print("temp_prop_test", temp_prop_test)
+            # print("temp_prop_train", temp_prop_train.dtypes)
+            # print("temp_prop_test", temp_prop_test.dtypes)
             try:
                 PROP_model=Prophet(daily_seasonality=False,yearly_seasonality=True,weekly_seasonality=False,interval_width=0.80)
                 PROP_model = PROP_model.add_seasonality(name='yearly', period=12, fourier_order=5, prior_scale=0.02).fit(temp_prop_train)
@@ -415,13 +426,14 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
     else:
         pass
     forecasts_PROP.index = np.array(fcst_input_data.index)
-    print(forecasts_PROP)
+    # print(forecasts_PROP)
 
     forecasts_ARCH = pd.DataFrame(columns=list_ARCH)
     fcst_start_date = fcst_input_data.index[0]
     print("fcst_start_date", fcst_start_date)
     fcst_end_date = fcst_input_data.index[-1]
     if len(list_ARCH) > 0:
+        print("starting the refit for ARCH ")
         stepwise_model = pd.DataFrame(columns=list_ARCH)
         forecasts_ARCH = pd.DataFrame()
         for col in list_ARCH:
@@ -448,9 +460,12 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
             forecasts_ARCH.index = np.array(fcst_input_data.index)
         else:
             pass
+    print("ending the forecasting refitting function")
+    # print(forecasts_ARCH.shape, forecasts_ARIM.shape ,  forecasts_HWSE.shape, forecasts_PROP.shape)
     return forecasts_ARIM, forecasts_HWSE, forecasts_PROP, forecasts_ARCH
 
 def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data):
+    print(" starting the last function")
     forecast_output = pd.concat([final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH], axis=1)
     forecast_output_1 = forecast_output.copy()
     print("forecast_output:", forecast_output.columns)
@@ -467,9 +482,10 @@ def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_
     for col in sum_mat_labels:
         revised_forecasts[col] = revised_forecasts[col].apply(funct)
     revised_forecasts.index= np.array(fcst_input_data.index)
+    print(" ending the last function")
     return revised_forecasts
 
-def hts_forecast_function(df : pd.DataFrame , hier : dict , exogenus_variables : list , predictable_variables : list , fcst_input_data : pd.DataFrame,auto_arima_m_value:int):
+def hts_forecast_function(df : pd.DataFrame , hier : dict , exogenus_variables : list , predictable_variables : list , fcst_input_data : pd.DataFrame,m:int):
     # Splitting the data into train and test samples
 
     # create an error statement if the sum of exogenus and predcitable not equla to df variables
@@ -477,13 +493,14 @@ def hts_forecast_function(df : pd.DataFrame , hier : dict , exogenus_variables :
     train_data,test_data =    train_test_data(df)
     tree, sum_mat, sum_mat_labels =  define_tree(train_data[predictable_variables],hier) 
     revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH  = \
-    forecast_models(train_data, test_data, tree, sum_mat, sum_mat_labels, exogenus_variables, auto_arima_m_value)
+    forecast_models(train_data, test_data, tree, sum_mat, sum_mat_labels, exogenus_variables, m)
     list_ARIMA, list_HWSE, list_PROP, list_ARCH =  ensemble_fcst(test_data, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
                   mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels)
     final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH = forecast_refit(df, list_ARIMA,list_HWSE,list_PROP,list_ARCH,tree,sum_mat, sum_mat_labels,fcst_input_data,exogenus_variables )
 
     forecasted_output = forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data)       
-
+    return forecasted_output
+    
 def top_down_approach(df : pd.DataFrame, hier : dict, td_df : pd.DataFrame) :
     keys_list = set(hier.keys())
     values_list = []
