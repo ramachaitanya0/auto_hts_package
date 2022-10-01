@@ -72,6 +72,21 @@ def time_series_scores(forecast, actual):
     first_wk_mape = 100 * np.abs(forecast[0] - actual[0]) / funct1(np.abs(actual[0]))
     return mape, rmse, mae, first_wk_mape
 
+# def hierarchical_consistency(hier,my_list):
+#     my_dict = {}
+#     dict1 ={}
+#     dict1.keys = hier.keys()
+#     my_dict.keys = hier.keys()
+#     for val in my_dict.keys():
+#         my_dict[val] = my_list[hier[val]]/np.sum(my_list[hier[val]])
+#     for val in dict1.keys():
+#         dict1[val] = my_dict[val]*
+
+
+
+
+
+
 
 def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogenus_variables,m):
 
@@ -123,9 +138,12 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
         else :
             forecasts_ARIM_1[label] = np.random.randint(low = 0,high=2,size=len(temp_test))
         pred_dict_ARIM[label] = pd.DataFrame(data=abs(forecasts_ARIM_1[label].values), columns=['yhat'])
+         
     revised_ARIM = hts.functions.optimal_combination(pred_dict_ARIM, sum_mat, method='OLS', mse={})
     revised_forecasts_ARIM = pd.DataFrame(data=revised_ARIM[0:, 0:], index=forecasts_ARIM.index,
                                           columns=forecasts_ARIM.columns)
+    # for i in range(revised_forecasts_ARIM.shape[0]):
+    #     revised_forecasts_ARIM.iloc[i,:]=  hierarchical_consistency(hier,)                              
     mape_ARIM = pd.DataFrame(columns=forecasts_ARIM.columns)
     rmse_ARIM = pd.DataFrame(columns=temp_train.columns)
     mae_ARIM = pd.DataFrame(columns=temp_train.columns)
@@ -227,76 +245,81 @@ def forecast_models(temp_train, temp_test, tree, sum_mat, sum_mat_labels, exogen
 
     # With ARCH Model 
 
-    forecasts_ARCH = pd.DataFrame(columns=sum_mat_labels)
-    forecasts_ARCH_1 = pd.DataFrame(columns=sum_mat_labels)
-    for col in sum_mat_labels:
-        try:
-            try:
-                stepwise_model = arch_model(temp_train[[col]],  vol='ARCH',  p=1, lags=12).fit()
-                fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                # print("ARCH_fcst:", fcst)
-            except:
-                try:
-                    stepwise_model = arch_model(temp_train[[col]], vol='ARCH', p=1, lags=6).fit()
-                    fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                    # print("ARCH_fcst:", fcst)
-                except:
-                    try:
-                        stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=3).fit()
-                        fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
+    # forecasts_ARCH = pd.DataFrame(columns=sum_mat_labels)
+    # forecasts_ARCH_1 = pd.DataFrame(columns=sum_mat_labels)
+    # for col in sum_mat_labels:
+    #     try:
+    #         try:
+    #             stepwise_model = arch_model(temp_train[[col]],  vol='ARCH',  p=1, lags=12).fit()
+    #             fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
+    #             # print("ARCH_fcst:", fcst)
+    #         except:
+    #             try:
+    #                 stepwise_model = arch_model(temp_train[[col]], vol='ARCH', p=1, lags=6).fit()
+    #                 fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
+    #                 # print("ARCH_fcst:", fcst)
+    #             except:
+    #                 try:
+    #                     stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=3).fit()
+    #                     fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
+    #                     # print("ARCH_fcst:", fcst)
+    #                 except:
+    #                     stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=1).fit()
+    #                     fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
                         # print("ARCH_fcst:", fcst)
-                    except:
-                        stepwise_model = arch_model(temp_train[[col]], vol='ARCH',  p=1, lags=1).fit()
-                        fcst = stepwise_model.forecast(horizon=len(temp_test)).mean.values[-1, :]
-                        # print("ARCH_fcst:", fcst)
-        except:
-            print("ARCH_fcst: failed")
-            fcst = np.random.randint(low = 0,high=2,size=len(temp_test))
-        forecasts_ARCH[col] = fcst
-        # print("ending ARCH:", col)
-    forecasts_ARCH.index = temp_test.index
-    # print("forecasts_ARCH:", forecasts_ARCH)
-    pred_dict_ARCH = collections.OrderedDict()
-    for label in forecasts_ARCH.columns:
-        if np.all(np.array(forecasts_ARCH[label].values)) :
-            forecasts_ARCH_1[label] = np.array(forecasts_ARCH[label])
-        else :
-            forecasts_ARCH_1[label]  =  np.random.randint(low = 0,high=2,size=len(temp_test))
-        pred_dict_ARCH[label] = pd.DataFrame(data=abs(forecasts_ARCH_1[label].values), columns=['yhat'])
-    revised_ARCH = hts.functions.optimal_combination(pred_dict_ARCH, sum_mat, method='OLS', mse={})
-    revised_forecasts_ARCH = pd.DataFrame(data=revised_ARCH[0:, 0:], index=forecasts_ARCH.index,
-                                          columns=forecasts_ARCH.columns)
-    mape_ARCH = pd.DataFrame(columns=forecasts_ARCH.columns)
-    rmse_ARCH = pd.DataFrame(columns=temp_train.columns)
-    mae_ARCH = pd.DataFrame(columns=temp_train.columns)
-    first_wk_mape_ARCH = pd.DataFrame(columns=temp_train.columns)
-    for col in revised_forecasts_ARCH.columns:
-        revised_forecasts_ARCH[col] = revised_forecasts_ARCH[col].apply(funct)
-        mape_ARCH.loc[0, col], rmse_ARCH.loc[0, col], mae_ARCH.loc[0, col], first_wk_mape_ARCH.loc[
-            0, col] = time_series_scores(revised_forecasts_ARCH[col], temp_test[col])
-    print("ending the forecast models function")
-    return  revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH
+    #     except:
+    #         print("ARCH_fcst: failed")
+    #         fcst = np.random.randint(low = 0,high=2,size=len(temp_test))
+    #     forecasts_ARCH[col] = fcst
+    #     # print("ending ARCH:", col)
+    # forecasts_ARCH.index = temp_test.index
+    # # print("forecasts_ARCH:", forecasts_ARCH)
+    # pred_dict_ARCH = collections.OrderedDict()
+    # for label in forecasts_ARCH.columns:
+    #     if np.all(np.array(forecasts_ARCH[label].values)) :
+    #         forecasts_ARCH_1[label] = np.array(forecasts_ARCH[label])
+    #     else :
+    #         forecasts_ARCH_1[label]  =  np.random.randint(low = 0,high=2,size=len(temp_test))
+    #     pred_dict_ARCH[label] = pd.DataFrame(data=abs(forecasts_ARCH_1[label].values), columns=['yhat'])
+    # revised_ARCH = hts.functions.optimal_combination(pred_dict_ARCH, sum_mat, method='OLS', mse={})
+    # revised_forecasts_ARCH = pd.DataFrame(data=revised_ARCH[0:, 0:], index=forecasts_ARCH.index,
+    #                                       columns=forecasts_ARCH.columns)
+    # mape_ARCH = pd.DataFrame(columns=forecasts_ARCH.columns)
+    # rmse_ARCH = pd.DataFrame(columns=temp_train.columns)
+    # mae_ARCH = pd.DataFrame(columns=temp_train.columns)
+    # first_wk_mape_ARCH = pd.DataFrame(columns=temp_train.columns)
+    # for col in revised_forecasts_ARCH.columns:
+    #     revised_forecasts_ARCH[col] = revised_forecasts_ARCH[col].apply(funct)
+    #     mape_ARCH.loc[0, col], rmse_ARCH.loc[0, col], mae_ARCH.loc[0, col], first_wk_mape_ARCH.loc[
+    #         0, col] = time_series_scores(revised_forecasts_ARCH[col], temp_test[col])
+    # print("ending the forecast models function")
+    # return  revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH
+    return  revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP,  mape_ARIM, mape_HWSE, mape_PROP
 
 
-def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
-                  mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels):
+# def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
+#                   mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels):
+def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP,  mape_ARIM,
+                  mape_HWSE, mape_PROP, sum_mat_labels):
     print("starting ensemble forecasting ")              
     select_model = pd.DataFrame(columns=sum_mat_labels)
     forecasts_ENSE = pd.DataFrame(columns=sum_mat_labels)
-    models_list = ["ARIM", "HWSE", "PROP", "ARCH"]
+    models_list = ["ARIM", "HWSE", "PROP"]
+    # models_list = ["ARIM", "HWSE", "PROP", "ARCH"]
     revised_forecasts_ARIM['approach'] = "ARIM"
     revised_forecasts_HWSE['approach'] = "HWSE"
     revised_forecasts_PROP['approach'] = "PROP"
-    revised_forecasts_ARCH['approach'] = "ARCH"
+    # revised_forecasts_ARCH['approach'] = "ARCH"
     mape_ARIM['approach'] = "ARIM"
     mape_HWSE['approach'] = "HWSE"
     mape_PROP['approach'] = "PROP"
-    mape_ARCH['approach'] = "ARCH"
+    # mape_ARCH['approach'] = "ARCH"
     # print("mape_ARIM", mape_ARIM.shape)
     # print("mape_HWSE", mape_HWSE.shape)
     # print("mape_PROP", mape_PROP.shape)
     # print("mape_ARCH", mape_ARCH.shape)
-    mape_data = ((mape_ARIM.append(mape_HWSE)).append(mape_PROP)).append(mape_ARCH)
+    # mape_data = ((mape_ARIM.append(mape_HWSE)).append(mape_PROP)).append(mape_ARCH)
+    mape_data = ((mape_ARIM.append(mape_HWSE)).append(mape_PROP))
     # print("mape_data", mape_data.transpose())
     for col in sum_mat_labels:
         select_model.loc[0, col] = mape_data[mape_data[col] == mape_data[col].min()]['approach'].to_numpy()[0]
@@ -306,16 +329,18 @@ def ensemble_fcst(temp_test, revised_forecasts_ARIM, revised_forecasts_HWSE, rev
     list_ARIMA = select_model[select_model['APPROACH'] == "ARIM"]['area/dealer'].to_list()
     list_HWSE = select_model[select_model['APPROACH'] == "HWSE"]['area/dealer'].to_list()
     list_PROP = select_model[select_model['APPROACH'] == "PROP"]['area/dealer'].to_list()
-    list_ARCH = select_model[select_model['APPROACH'] == "ARCH"]['area/dealer'].to_list()
+    # list_ARCH = select_model[select_model['APPROACH'] == "ARCH"]['area/dealer'].to_list()
     print("list of ARIMA", list_ARIMA)
     print("list of HWSE", list_HWSE)
     print("list of PROP", list_PROP)
-    print("list of ARCH", list_ARCH)
+    # print("list of ARCH", list_ARCH)
     print("ending the ensemble forecasting function")
-    return list_ARIMA, list_HWSE, list_PROP, list_ARCH
+    # return list_ARIMA, list_HWSE, list_PROP, list_ARCH
+    return list_ARIMA, list_HWSE, list_PROP
 
 
-def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tree, sum_mat, sum_mat_labels, fcst_input_data,exogenus_variables):
+def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, tree, sum_mat, sum_mat_labels, fcst_input_data,exogenus_variables):
+# def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tree, sum_mat, sum_mat_labels, fcst_input_data,exogenus_variables):
 #def forecast_refit(ts_data_2, list_ARIMA, list_HWSE,  tree, sum_mat, sum_mat_labels,fcst_input_data):
     print("starting forecast refitting ") 
     forecasts_ARIM = pd.DataFrame(columns=list_ARIMA)
@@ -394,7 +419,7 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
 
     PROP_model = pd.DataFrame(columns=list_PROP)
     forecasts_PROP = pd.DataFrame(index=np.array(fcst_input_data.index),  columns=list_PROP)
-    if len(list_PROP) > 0:
+    if len(list_PROP) > 0 : 
         print("starting the refit for PROP ")
         for col in list_PROP:
             temp_prop_train = pd.DataFrame()
@@ -428,45 +453,48 @@ def forecast_refit(ts_data_2, list_ARIMA,  list_HWSE,  list_PROP, list_ARCH, tre
     forecasts_PROP.index = np.array(fcst_input_data.index)
     # print(forecasts_PROP)
 
-    forecasts_ARCH = pd.DataFrame(columns=list_ARCH)
-    fcst_start_date = fcst_input_data.index[0]
-    print("fcst_start_date", fcst_start_date)
-    fcst_end_date = fcst_input_data.index[-1]
-    if len(list_ARCH) > 0:
-        print("starting the refit for ARCH ")
-        stepwise_model = pd.DataFrame(columns=list_ARCH)
-        forecasts_ARCH = pd.DataFrame()
-        for col in list_ARCH:
-            try:
-                try:
-                    stepwise_model = arch_model(ts_data_2[col].values,  mean="AR", vol= "ARCH", p=1, lags=12).fit()
-                    fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
-                except:
-                    try:
-                        stepwise_model = arch_model(ts_data_2[col].values,   mean="AR", vol= "ARCH", p=1,lags=6).fit()
-                        fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
-                        print("ARCH_fcst_6", fcst)
-                    except:
-                        try:
-                            stepwise_model = arch_model(ts_data_2[col].values,  mean="AR", vol= "ARCH",p=1, lags=3).fit()
-                            fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
-                        except:
-                            stepwise_model = arch_model(ts_data_2[col].values,  mean='AR', vol= "ARCH", p=1).fit()
-                            fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
-            except:
-                print("ARCH failed")
-                fcst = [0] * len(fcst_input_data)
-            forecasts_ARCH[col] = fcst
-            forecasts_ARCH.index = np.array(fcst_input_data.index)
-        else:
-            pass
-    print("ending the forecasting refitting function")
+    # forecasts_ARCH = pd.DataFrame(columns=list_ARCH)
+    # fcst_start_date = fcst_input_data.index[0]
+    # print("fcst_start_date", fcst_start_date)
+    # fcst_end_date = fcst_input_data.index[-1]
+    # if len(list_ARCH) > 0:
+    #     print("starting the refit for ARCH ")
+    #     stepwise_model = pd.DataFrame(columns=list_ARCH)
+    #     forecasts_ARCH = pd.DataFrame()
+    #     for col in list_ARCH:
+    #         try:
+    #             try:
+    #                 stepwise_model = arch_model(ts_data_2[col].values,  mean="AR", vol= "ARCH", p=1, lags=12).fit()
+    #                 fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
+    #             except:
+    #                 try:
+    #                     stepwise_model = arch_model(ts_data_2[col].values,   mean="AR", vol= "ARCH", p=1,lags=6).fit()
+    #                     fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
+    #                     print("ARCH_fcst_6", fcst)
+    #                 except:
+    #                     try:
+    #                         stepwise_model = arch_model(ts_data_2[col].values,  mean="AR", vol= "ARCH",p=1, lags=3).fit()
+    #                         fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
+    #                     except:
+    #                         stepwise_model = arch_model(ts_data_2[col].values,  mean='AR', vol= "ARCH", p=1).fit()
+    #                         fcst = stepwise_model.forecast(horizon=len(fcst_input_data)).mean.values[-1, :]
+    #         except:
+    #             print("ARCH failed")
+    #             fcst = [0] * len(fcst_input_data)
+    #         forecasts_ARCH[col] = fcst
+    #         forecasts_ARCH.index = np.array(fcst_input_data.index)
+    #     else:
+    #         pass
+    # print("ending the forecasting refitting function")
     # print(forecasts_ARCH.shape, forecasts_ARIM.shape ,  forecasts_HWSE.shape, forecasts_PROP.shape)
-    return forecasts_ARIM, forecasts_HWSE, forecasts_PROP, forecasts_ARCH
+    return forecasts_ARIM, forecasts_HWSE, forecasts_PROP
+    # return forecasts_ARIM, forecasts_HWSE, forecasts_PROP, forecasts_ARCH
 
-def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data):
+def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, sum_mat, sum_mat_labels, fcst_input_data):
+# def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data):
     print(" starting the last function")
-    forecast_output = pd.concat([final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH], axis=1)
+    forecast_output = pd.concat([final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP], axis=1)
+    # forecast_output = pd.concat([final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH], axis=1)
     forecast_output_1 = forecast_output.copy()
     print("forecast_output:", forecast_output.columns)
     pred_dict = collections.OrderedDict()
@@ -482,23 +510,32 @@ def forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_
     for col in sum_mat_labels:
         revised_forecasts[col] = revised_forecasts[col].apply(funct)
     revised_forecasts.index= np.array(fcst_input_data.index)
+
     print(" ending the last function")
     return revised_forecasts
 
 def hts_forecast_function(df : pd.DataFrame , hier : dict , exogenus_variables : list , predictable_variables : list , fcst_input_data : pd.DataFrame,m:int):
     # Splitting the data into train and test samples
-
     # create an error statement if the sum of exogenus and predcitable not equla to df variables
 
     train_data,test_data =    train_test_data(df)
     tree, sum_mat, sum_mat_labels =  define_tree(train_data[predictable_variables],hier) 
-    revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH  = \
-    forecast_models(train_data, test_data, tree, sum_mat, sum_mat_labels, exogenus_variables, m)
-    list_ARIMA, list_HWSE, list_PROP, list_ARCH =  ensemble_fcst(test_data, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
-                  mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels)
-    final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH = forecast_refit(df, list_ARIMA,list_HWSE,list_PROP,list_ARCH,tree,sum_mat, sum_mat_labels,fcst_input_data,exogenus_variables )
+    # revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM, mape_HWSE, mape_PROP, mape_ARCH  = \
+    # forecast_models(train_data, test_data, tree, sum_mat, sum_mat_labels, exogenus_variables, m)
+    # list_ARIMA, list_HWSE, list_PROP, list_ARCH =  ensemble_fcst(test_data, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP, revised_forecasts_ARCH,  mape_ARIM,
+    #               mape_HWSE, mape_PROP, mape_ARCH, sum_mat_labels)
+    # final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH = forecast_refit(df, list_ARIMA,list_HWSE,list_PROP,list_ARCH,tree,sum_mat, sum_mat_labels,fcst_input_data,exogenus_variables )
 
-    forecasted_output = forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data)       
+    # forecasted_output = forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, final_forecasts_ARCH, sum_mat, sum_mat_labels, fcst_input_data) 
+          
+    revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP,  mape_ARIM, mape_HWSE, mape_PROP  = \
+    forecast_models(train_data, test_data, tree, sum_mat, sum_mat_labels, exogenus_variables, m)
+    list_ARIMA, list_HWSE, list_PROP =  ensemble_fcst(test_data, revised_forecasts_ARIM, revised_forecasts_HWSE, revised_forecasts_PROP,  mape_ARIM,
+                  mape_HWSE, mape_PROP, sum_mat_labels)
+    final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP = forecast_refit(df, list_ARIMA,list_HWSE,list_PROP,tree,sum_mat, sum_mat_labels,fcst_input_data,exogenus_variables )
+
+    forecasted_output = forecast_output(final_forecasts_ARIM, final_forecasts_HWSE, final_forecasts_PROP, sum_mat, sum_mat_labels, fcst_input_data) 
+          
     return forecasted_output
     
 def top_down_approach(df : pd.DataFrame, hier : dict, td_df : pd.DataFrame) :
