@@ -18,8 +18,8 @@ setup(
     long_description_content_type = 'text/markdown',
     # packages = find_packages(),
     license="MIT",
-    py_modules=["hts_forecasting"],
-    package_dir={"":"src"},
+    # py_modules=["hts_forecasting"],
+    package_dir={"":"auto_hts"},
     install_requires=["scikit_learn==1.0.2","scikit-hts==0.5.12","arch==5.2.0","pmdarima==1.8.5","fbprophet==0.7.1","pystan==2.19.1.1"],
     url = "https://github.com/ramachaitanya0/auto_hts_package",
 

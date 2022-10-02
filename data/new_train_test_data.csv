@@ -1,4 +1,4 @@
-start_of_week,total,Area1,Dealer1,Dealer2,Dealer3,Dealer4,Dealer5,Dealer6,Dealer7,month,year,week_of_month,event_flag,end_of_week,event_cnt,peak_flag,festival_flag,month_year,covid_flag
+start_of_week,total,TN1_TN1-Vellore,TN1_TN1-Vellore_80124,TN1_TN1-Vellore_10853,TN1_TN1-Vellore_10689,TN1_TN1-Vellore_11720,TN1_TN1-Vellore_11992,TN1_TN1-Vellore_11706,TN1_TN1-Vellore_13054,month,year,week_of_month,event_flag,end_of_week,event_cnt,peak_flag,festival_flag,month_year,covid_flag
 2017-01-09T00:00:00.000+0000,3,3,0,3,0,0,0,0,0,1,2017,1,null,null,null,0,0,2017-1,0
 2017-01-16T00:00:00.000+0000,3,3,1,0,0,0,0,0,2,1,2017,2,null,null,null,0,0,2017-1,0
 2017-01-23T00:00:00.000+0000,2,2,2,0,0,0,0,0,0,1,2017,3,null,null,null,0,0,2017-1,0
