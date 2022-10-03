@@ -132,7 +132,7 @@ class Auto_HTS_Regressor():
                     except:
                         fcst = np.random.randint(low = 0,high=2,size=len(temp_test))
             forecasts_ARIM[col] = fcst
-            # print("ending ARIMA:", col)
+            print("ending ARIMA:", col)
         forecasts_ARIM.index = temp_test.index
         pred_dict_ARIM = collections.OrderedDict()
         for label in forecasts_ARIM.columns:

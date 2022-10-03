@@ -30,7 +30,7 @@ pip install auto_hts_forecast
 ```
 ## Usage
 --- 
-Refer to demo.ipynb in test directory  
+Refer to [demo.ipynb](https://github.com/ramachaitanya0/auto_hts_package/blob/main/test/demo.ipynb) in test directory  
 
 
 
